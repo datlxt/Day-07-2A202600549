@@ -154,11 +154,11 @@ Giải thích cách tiếp cận của bạn khi implement các phần chính tr
 
 | Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | Con chó đang chạy trong sân. | Con cún đang chạy trong vườn. | high | -0.090 | ❌ |
-| 2 | Tôi rất thích xem phim điện ảnh Việt Nam. | Tôi yêu những bộ phim của Việt Nam. | high | 0.053 | ❌ |
-| 3 | Hôm nay trời mưa rất to. | Kéo đặt máy tính lại cho gần. | low | 0.237 | ❌ |
-| 4 | Người Bất Tử là phim kỳ ảo. | Tháng Năm Rực Rỡ là phim học đường. | low | 0.029 | ✅ |
-| 5 | Học sinh đến trường mỗi sáng. | Các em học sinh đi học mỗi ngày. | high | 0.222 | ⚠️ một phần |
+| 1 | Con chó đang chạy trong sân. | Con cún đang chạy trong vườn. | high | -0.090 | Sai |
+| 2 | Tôi rất thích xem phim điện ảnh Việt Nam. | Tôi yêu những bộ phim của Việt Nam. | high | 0.053 | Sai |
+| 3 | Hôm nay trời mưa rất to. | Kéo đặt máy tính lại cho gần. | low | 0.237 | Sai |
+| 4 | Người Bất Tử là phim kỳ ảo. | Tháng Năm Rực Rỡ là phim học đường. | low | 0.029 | Đúng |
+| 5 | Học sinh đến trường mỗi sáng. | Các em học sinh đi học mỗi ngày. | high | 0.222 | Đúng một phần |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
 > Bất ngờ nhất là cặp 3 (hai câu hoàn toàn không liên quan) lại có điểm cao nhất (0.237), trong khi cặp 1 và 2 (đồng nghĩa rõ ràng) lại rất thấp, thậm chí âm. Lý do: lab đang dùng **mock embedding** — nó băm văn bản bằng md5 rồi sinh vector giả ngẫu nhiên, **không hề biểu diễn ngữ nghĩa**. Điều này cho thấy chất lượng similarity phụ thuộc hoàn toàn vào embedding model: muốn cosine phản ánh đúng nghĩa thì phải dùng embedder thật (sentence-transformers / OpenAI), không thể trông cậy vào mock.
@@ -183,11 +183,11 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | Nhân vật chính *Hoa Vàng* | Đoạn thoại từ *Cô Gái Đến Từ Hôm Qua* | 0.465 | ⚠️ Có nhưng ở rank 3 | Không bám đúng chunk (top-1 sai phim) |
-| 2 | Chủ đề *Bụi Đời Chợ Lớn* | Đoạn thoại từ *Cô Gái Đến Từ Hôm Qua* | 0.401 | ❌ Không có trong top-3 | Ungrounded — context sai phim |
-| 3 | Bối cảnh *Nhắm Mắt Thấy Mùa Hè* | Đoạn từ *Tôi Thấy Hoa Vàng* | 0.401 | ❌ Không có trong top-3 | Ungrounded — context sai phim |
-| 4 | Khả năng *Người Bất Tử* | Đoạn từ *Người Bất Tử* (Hùng, Duyên) | 0.389 | ✅ Có ở rank 1 | Bám đúng context phim Người Bất Tử |
-| 5 | Phim bối cảnh học sinh *(filter)* | Đoạn từ *Cô Gái Đến Từ Hôm Qua* | 0.352 | ✅ Có (cả top-3 đều `genre=hoc_duong`) | Bám đúng — filter giới hạn về phim học đường |
+| 1 | Nhân vật chính *Hoa Vàng* | Đoạn thoại từ *Cô Gái Đến Từ Hôm Qua* | 0.465 | Có nhưng ở rank 3 | Không bám đúng chunk (top-1 sai phim) |
+| 2 | Chủ đề *Bụi Đời Chợ Lớn* | Đoạn thoại từ *Cô Gái Đến Từ Hôm Qua* | 0.401 | Không có trong top-3 | Ungrounded — context sai phim |
+| 3 | Bối cảnh *Nhắm Mắt Thấy Mùa Hè* | Đoạn từ *Tôi Thấy Hoa Vàng* | 0.401 | Không có trong top-3 | Ungrounded — context sai phim |
+| 4 | Khả năng *Người Bất Tử* | Đoạn từ *Người Bất Tử* (Hùng, Duyên) | 0.389 | Có ở rank 1 | Bám đúng context phim Người Bất Tử |
+| 5 | Phim bối cảnh học sinh *(filter)* | Đoạn từ *Cô Gái Đến Từ Hôm Qua* | 0.352 | Có (cả top-3 đều genre hoc_duong) | Bám đúng — filter giới hạn về phim học đường |
 
 **Bao nhiêu queries trả về chunk relevant trong top-3?** 3 / 5  *(Q1, Q4, Q5; tổng điểm Retrieval Quality = 5/10)*
 
