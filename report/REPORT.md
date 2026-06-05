@@ -99,19 +99,24 @@ Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Retrieval Quality? |
 |-----------|----------|-------------|------------|--------------------|
-| Bụi Đời Chợ Lớn | best baseline (recursive) | 465 | 171.7 | Giữ ngữ cảnh tốt hơn, chunk theo ranh giới tự nhiên |
-| Bụi Đời Chợ Lớn | **của tôi (fixed 500/50)** | 539 | 199.8 | Retrieval tổng 5/10; chunk đều nhưng cắt ngang câu làm loãng ngữ cảnh |
+| Bụi Đời Chợ Lớn | best baseline (Recursive, size=500) | 172 | 467.7 | Retrieval 7/10 (mock) — giữ ngữ cảnh tốt hơn nhờ ranh giới tự nhiên |
+| Bụi Đời Chợ Lớn | **của tôi (FixedSize, size=500)** | 180 | 498.5 | Retrieval 5/10 (mock) — chunk đều nhưng cắt ngang câu làm loãng ngữ cảnh |
 
 ### So Sánh Với Thành Viên Khác
 
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Lê Xuân Tiến Đạt | FixedSize 500/50 | 5/10 | Đơn giản, chunk đều, metadata filter hoạt động tốt | Cắt ngang câu/cảnh → Q2, Q3 trượt |
-| [Tên] | *(chờ kết quả thành viên)* | | | |
-| [Tên] | *(chờ kết quả thành viên)* | | | |
+| Lê Xuân Tiến Đạt | FixedSize | 5/10 | Đơn giản, chunk đều, metadata filter hoạt động tốt | Cắt ngang câu/cảnh → Q2, Q3 trượt |
+| Nguyễn Ngọc Hải | Sentence (OpenAI embedder) | 8/10 | Sentence + embedder thật → cao nhất nhóm (4/5); chunk theo câu, gọn ý | Nhiều chunk (3969); cần API key + chi phí |
+| Phạm Văn Lợi | Recursive 1200 (mock) | 4/10 | Ít chunk, gọn (695), cắt theo ranh giới tự nhiên | Chunk to + mock → retrieval thấp (2/5) |
+| Dương Quang Huy | Recursive 1200 (OpenAI embedder) | 7/10 | Embedder thật hiểu ngữ nghĩa → retrieval cao (4/5, 7/10) dù chunk to | Cần API key + chi phí; khác backend với các thành viên còn lại |
+
+> *Lưu ý backend: Đạt, Lợi dùng mock embeddings; Hải, Huy dùng OpenAI (real).*
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
-> *(Điền sau khi tổng hợp điểm cả nhóm — so sánh FixedSize của tôi với Sentence/Recursive/custom của các bạn.)*
+> Tốt nhất là **Hải — Sentence + OpenAI (8/10)**. Bằng chứng rõ nhất là cặp đối chứng **Lợi vs Huy**: cả hai cùng Recursive chunk_size=1200 (đều 695 chunks), chỉ khác embedder — Lợi (mock) 4/10 còn Huy (OpenAI) 7/10. Cùng một cách chunk, chỉ đổi sang embedder thật mà điểm nhảy vọt → **embedding model là yếu tố quyết định chất lượng retrieval, mạnh hơn cả việc chọn/tinh chỉnh chunker**.
+>
+> Khi đã dùng embedder thật (OpenAI), Sentence (Hải, 8/10) nhỉnh hơn Recursive-1200 (Huy, 7/10) — chunk nhỏ theo câu giúp embedding tập trung hơn chunk to. Còn khi cùng dùng mock, các strategy đều thấp và chênh ít (Đạt FixedSize 5/10, Lợi Recursive-1200 4/10) vì mock không hiểu ngữ nghĩa. **Kết luận: chọn embedder tốt quan trọng nhất; sau đó chunk nhỏ/vừa nhỉnh hơn chunk to.**
 
 ---
 
@@ -196,13 +201,13 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 ## 7. What I Learned (5 điểm — Demo)
 
 **Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> *Viết 2-3 câu:*
+> Điều giá trị nhất là cặp đối chứng Lợi–Huy: cùng RecursiveChunker chunk_size=1200, nhưng Lợi (mock) chỉ 4/10 còn Huy (OpenAI) lên 7/10. Nó cho tôi thấy rõ rằng **embedding model mới là yếu tố quyết định retrieval, mạnh hơn cả việc chọn hay tinh chỉnh chunker** — điều mà nếu chỉ làm một mình với mock tôi sẽ không nhận ra. Ngoài ra, kết quả của Hải (Sentence + OpenAI, 8/10) cho thấy với embedder tốt thì chunk nhỏ theo câu lại nhỉnh hơn chunk to.
 
 **Điều hay nhất tôi học được từ nhóm khác (qua demo):**
-> *Viết 2-3 câu:*
+> Các nhóm khác trình bày rất chi tiết, kỹ năng thuyết trình tốt, lại có sản phẩm trực quan và phần demo dễ hiểu nên người nghe nắm được vấn đề rất nhanh. Tôi học được rằng ngoài việc làm đúng kỹ thuật, cách trình bày mạch lạc kèm demo trực quan giúp truyền đạt kết quả hiệu quả hơn nhiều — đây là điều nhóm tôi cần cải thiện ở lần sau.
 
 **Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
-> *Viết 2-3 câu:*
+> Tôi sẽ dùng embedder thật ngay từ đầu (ưu tiên model hỗ trợ tiếng Việt tốt) thay vì mock, vì đó là yếu tố ảnh hưởng lớn nhất. Về dữ liệu, tôi sẽ thêm metadata phong phú và phân biệt hơn (ví dụ `setting`, `nhân vật chính`) để metadata filtering hữu ích hơn, và thử chunk theo cấu trúc kịch bản (theo cảnh / khối hội thoại) thay vì cắt cứng theo ký tự để giữ trọn ngữ cảnh.
 
 ---
 
@@ -210,12 +215,14 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 | Tiêu chí | Loại | Điểm tự đánh giá |
 |----------|------|-------------------|
-| Warm-up | Cá nhân | / 5 |
-| Document selection | Nhóm | / 10 |
-| Chunking strategy | Nhóm | / 15 |
-| My approach | Cá nhân | / 10 |
-| Similarity predictions | Cá nhân | / 5 |
-| Results | Cá nhân | / 10 |
-| Core implementation (tests) | Cá nhân | / 30 |
-| Demo | Nhóm | / 5 |
-| **Tổng** | | **/ 100** |
+| Warm-up | Cá nhân | 5 / 5 |
+| Document selection | Nhóm | 9 / 10 |
+| Chunking strategy | Nhóm | 13 / 15 |
+| My approach | Cá nhân | 9 / 10 |
+| Similarity predictions | Cá nhân | 5 / 5 |
+| Results | Cá nhân | 8 / 10 |
+| Core implementation (tests) | Cá nhân | 30 / 30 |
+| Demo | Nhóm | 4 / 5 |
+| **Tổng** | | **83 / 100** |
+
+> *Ghi chú tự đánh giá: Core implementation 30/30 (42/42 test pass). Trừ nhẹ ở Document selection (genre/year/director cần verify nguồn) và Chunking strategy (dùng chunker có sẵn, chưa thiết kế custom; nhóm ban đầu lệch backend). Results 8/10 vì có chạy + phân tích đầy đủ nhưng retrieval mock còn khiêm tốn (5/10). Điều chỉnh lại điểm theo đánh giá thực tế của bạn.*
